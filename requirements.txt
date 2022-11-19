@@ -1,0 +1,10 @@
+cve_searchsploit
+pytrends
+requests
+bs4
+lxml
+python-dotenv
+pandas
+numpy
+jupyter
+matplotlib
