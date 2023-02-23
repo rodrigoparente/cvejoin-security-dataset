@@ -1,4 +1,4 @@
-# CVEjoin: A Security Dataset of Vulnerability and Threat Intelligence Information
+# CVEjoin: A Dataset of Information-Security Vulnerability and Threat Intelligence
 
 The code from this repository can be used to download and correlate information about known vulnerabilities from different security feed sources, such as:
 
