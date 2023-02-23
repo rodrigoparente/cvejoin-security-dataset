@@ -1,9 +1,5 @@
-# python imports
-from datetime import datetime
-
 # third-party imports
 import pandas as pd
-import numpy as np
 
 
 def process_security_feeds():
@@ -15,9 +11,6 @@ def process_security_feeds():
     cves['cwe'] = cves['cwe'].apply(eval)
     cves['part'] = cves['part'].apply(eval)
     cves['vendor'] = cves['vendor'].apply(eval)
-
-    cves['cve_published_date'] =\
-        pd.to_datetime(cves['cve_published_date'], format='%m/%d/%Y')
 
     # merging weakness lists
 
@@ -59,9 +52,6 @@ def process_security_feeds():
     exploits = exploits.drop_duplicates(subset=['cve_id'])
 
     cves = cves.merge(exploits, how='left', on='cve_id')
-
-    cves['exploit_published_date'] =\
-        pd.to_datetime(cves['exploit_published_date'], format='%Y-%m-%d', errors='coerce')
 
     # merging epss
 
@@ -122,72 +112,13 @@ def process_security_feeds():
     trends = pd.read_csv('output/trends.csv')
     cves = cves.merge(trends, how='left', on='cve_id')
 
-    # formating output
-
-    vendors = pd.Series([x for _list in cves['vendor'] for x in _list])
-    top_ten_vendors = vendors.value_counts()[0:10].index
-
-    parts = list()
-    vendors = list()
-    cves_days = list()
-    exploits_days = list()
-
-    for row in zip(*cves.to_dict("list").values()):
-        curr_part = ''
-        for part in row[2]:
-            if part == 'h':
-                curr_part = 'hardware'
-            elif part == 'o':
-                curr_part = 'operating system'
-            elif part == 'a':
-                curr_part = 'application'
-        parts.append(curr_part)
-
-        curr_vendor = 'other'
-        for vendor in row[3]:
-            if vendor in top_ten_vendors:
-                curr_vendor = vendor
-        vendors.append(curr_vendor)
-
-        try:
-            cve_date = (datetime.now() - row[19]).days
-        except TypeError:
-            cve_date = 0
-
-        try:
-            exploit_date = (datetime.now() - row[24]).days
-        except TypeError:
-            exploit_date = 0
-
-        raw_days = [cve_date, exploit_date]
-        human_readable_days = [cves_days, exploits_days]
-
-        for date, result in zip(raw_days, human_readable_days):
-            if 0 < date <= 60:
-                result.append('menos de 3 meses')
-            elif 60 < date <= 180:
-                result.append('entre 3 e 6 meses')
-            elif 180 < date <= 270:
-                result.append('entre 6 e 9 meses')
-            elif 270 < date <= 365:
-                result.append('entre 9 e 12 meses')
-            elif date > 365:
-                result.append('mais de 12 meses')
-            else:
-                result.append(np.nan)
-
-    cves['part'] = parts
-    cves['vendor'] = vendors
-    cves['readable_cve_date'] = cves_days
-    cves['readable_exploit_date'] = exploits_days
-
     cves = cves[[
         'cve_id', 'cwe', 'part', 'vendor', 'product', 'description', 'cvss_type', 'attack_vector',
         'attack_complexity', 'privileges_required', 'user_interaction', 'scope',
         'confidentiality_impact', 'integrity_impact', 'availability_impact', 'base_score',
         'base_severity', 'exploitability_score', 'impact_score', 'cve_published_date',
-        'readable_cve_date', 'cve_last_modified_date', 'mitre_top_25', 'owasp_top_10',
-        'exploit_name', 'exploit_published_date', 'readable_exploit_date', 'exploit_type',
+        'cve_last_modified_date', 'mitre_top_25', 'owasp_top_10',
+        'exploit_name', 'exploit_published_date', 'exploit_type',
         'exploit_platform', 'exploit_count', 'attack_type', 'epss',
         'google_trend', 'google_interest', 'advisory_published_date',
         'reference', 'update_available', 'audience', 'audience_normalized'
