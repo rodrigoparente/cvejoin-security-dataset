@@ -15,7 +15,6 @@ from commons.file import save_dict_to_csv
 # local imports
 from .constants import OUTPUT_FILE_PATH
 from .constants import TWEETS_FILE_PATH
-from .constants import MAX_NUMBER_CVES
 
 # hide warnings
 import warnings
@@ -24,7 +23,7 @@ warnings.filterwarnings('ignore')
 
 def download_trends():
     tweets = pd.read_csv(TWEETS_FILE_PATH)
-    tweets = tweets.sort_values(by=['audience'], ascending=False).head(MAX_NUMBER_CVES)
+    tweets = tweets.sort_values(by=['audience'], ascending=False)
 
     # instantiating pytrends object
     pytrends = TrendReq()
