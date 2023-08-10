@@ -1,4 +1,5 @@
 # python imports
+import logging
 from time import sleep
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -21,8 +22,16 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
+log = logging.getLogger(__name__)
+
+
 def download_trends():
-    tweets = pd.read_csv(TWEETS_FILE_PATH)
+    try:
+        tweets = pd.read_csv(TWEETS_FILE_PATH)
+    except FileNotFoundError:
+        log.error('\tCould not retrieve trend information because twitter data is unavailable.')
+        return
+
     tweets = tweets.sort_values(by=['audience'], ascending=False)
 
     # instantiating pytrends object

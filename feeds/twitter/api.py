@@ -17,6 +17,7 @@ class TwitterStream():
         self.bearer_token = token
 
         self.running = False
+        self.max_retries = 3
         self.session = requests.Session()
 
         self.base_url = 'https://api.twitter.com/2/tweets/search/stream'
@@ -33,15 +34,15 @@ class TwitterStream():
     def _connect(self, method, url):
         self.running = True
         http_error_wait = 5
+        error_count = 0
 
         try:
-            while self.running:
+            while self.running and error_count < self.max_retries:
                 with self.session.request(
                     method, url, auth=self._bearer_oauth, stream=True
                 ) as resp:
 
                     if resp.status_code == 200:
-
                         self.on_connect()
                         if not self.running:
                             break
@@ -66,6 +67,7 @@ class TwitterStream():
 
                         sleep(http_error_wait)
                         http_error_wait *= 2
+                        error_count += 1
 
         except Exception as exc:
             log.error(f'\tStream encountered an exception: {exc}')
@@ -84,7 +86,7 @@ class TwitterStream():
         )
 
         if resp.status_code != 200:
-            self.on_error(f'Cannot get rules (HTTP {resp.status_code}): {resp.text}')
+            self.on_error(f'Cannot get rules (HTTP {resp.status_code})')
 
         return resp.json()
 
@@ -102,7 +104,7 @@ class TwitterStream():
         )
 
         if resp.status_code != 200:
-            self.on_error(f'Cannot delete rules (HTTP {resp.status_code}): {resp.text}')
+            self.on_error(f'Cannot delete rules (HTTP {resp.status_code})')
 
     def add_rules(self, rules):
         """
@@ -118,7 +120,7 @@ class TwitterStream():
         )
 
         if resp.status_code != 201:
-            self.on_error(f'Cannot add rules (HTTP {resp.status_code}): {resp.text}')
+            self.on_error(f'Cannot add rules (HTTP {resp.status_code})')
 
     def filter(self, expansions=None, tweet_fields=None, user_fields=None):
         """

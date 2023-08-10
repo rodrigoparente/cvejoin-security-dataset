@@ -1,3 +1,6 @@
+# python imports
+import os
+
 # third-party imports
 import pandas as pd
 
@@ -8,6 +11,10 @@ from commons.impact import extract_vuln_impact
 
 def process_tweets(input_path, output_path):
     tweets_csv = pd.read_csv(input_path)
+
+    if tweets_csv.empty:
+        os.remove(input_path)
+        return
 
     tweets_dict = dict()
 

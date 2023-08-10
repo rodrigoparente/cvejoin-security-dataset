@@ -4,9 +4,13 @@ import logging
 from dateutil.parser import ParserError
 from urllib.parse import urljoin
 
+# third-party imports
+from requests.exceptions import ConnectionError
+
 # project imports
 from commons.file import save_list_to_csv
-from commons.parse import request_clean_page, extract_table_info
+from commons.parse import request_clean_page
+from commons.parse import extract_table_info
 
 # local imports
 from .constants import ADOBE_BASE_URL
@@ -21,7 +25,12 @@ log = logging.getLogger(__name__)
 def download_adobe_advisory():
 
     url = urljoin(ADOBE_BASE_URL, ADOBE_SECURITY_BULLETIN)
-    soup = request_clean_page(url)
+
+    try:
+        soup = request_clean_page(url)
+    except ConnectionError:
+        log.error(f'\tCould not connect to {url}.')
+        return
 
     advisories_url = list()
 
@@ -38,21 +47,26 @@ def download_adobe_advisory():
 
     for url in advisories_url:
 
-        soup = request_clean_page(url)
+        try:
+            soup = request_clean_page(url)
+        except ConnectionError:
+            log.error(f'\tCould not connect to {url}.')
+            continue
+
         tables = soup.find_all('table')
 
         try:
             summary_table = tables[0]
             vuln_details_table = tables[-1]
         except IndexError:
-            log.info('\tCould not extract info from page.')
+            log.error(f'\tCould not extract info from {url}.')
             continue
 
         try:
             summary = extract_table_info(summary_table)[0]
             vuln_details = extract_table_info(vuln_details_table)
         except ParserError:
-            log.error('\tCould not parse date.')
+            log.error(f'\tCould not parse details from {url}.')
             continue
 
         for vuln in vuln_details:

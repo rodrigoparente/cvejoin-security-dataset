@@ -1,5 +1,6 @@
 # python imports
-from dateutil.parser import parse, ParserError
+from dateutil.parser import parse
+from dateutil.parser import ParserError
 
 # third-party imports
 import requests

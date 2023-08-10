@@ -9,6 +9,7 @@ from dateutil.parser import parse, ParserError
 # third-party imports
 import requests
 import numpy as np
+from requests.exceptions import ConnectionError
 
 # project imports
 from commons.file import save_list_to_csv
@@ -34,10 +35,15 @@ def download_microsoft_advisory():
     for year in range(START_YEAR, END_YEAR):
         for month in months:
             url = urljoin(MICROSOFT_BASE_URL, f'{year}-{month}')
-            resp = requests.get(url, headers={'Accept': 'application/json'})
+
+            try:
+                resp = requests.get(url, headers={'Accept': 'application/json'})
+            except ConnectionError:
+                log.error(f'\tCould not connect to {url}.')
+                return
 
             if resp.status_code == 404:
-                log.error('\tAPI did not return results.')
+                log.error(f'\t{url} not found.')
                 continue
 
             try:

@@ -24,7 +24,12 @@ log = logging.getLogger(__name__)
 def download_intel_advisory():
 
     url = urljoin(INTEL_BASE_URL, INTEL_SECURITY_BULLETIN)
-    soup = request_clean_page(url)
+
+    try:
+        soup = request_clean_page(url)
+    except ConnectionError:
+        log.error(f'\tCould not connect to {url}.')
+        return
 
     intel_main_table = soup.find_all('tr', {'class': 'data'})
     advisories_url = list()
@@ -37,16 +42,21 @@ def download_intel_advisory():
 
     for advisory in advisories_url:
 
+        url = urljoin(INTEL_BASE_URL, advisory)
+
         try:
-            url = urljoin(INTEL_BASE_URL, advisory)
             soup = request_clean_page(url)
         except ConnectionError:
-            log.error('\tFailed to estabilish a new connection.')
+            log.error(f'\tCould not connect to {url}.')
             continue
 
         features_table = soup.find('div', {'class': 'editorialtable'})
 
-        _, impacts, _, published_date, *_ = features_table.find_all('tr', {'class': 'data'})
+        try:
+            _, impacts, _, published_date, *_ = features_table.find_all('tr', {'class': 'data'})
+        except AttributeError:
+            log.error(f'\tCould not extract info from {url}.')
+            continue
 
         impacts = impacts.find_all('td')[1].text.split(',')
         impacts = [value.strip().rstrip() for value in impacts]

@@ -21,7 +21,11 @@ log = logging.getLogger(__name__)
 
 def download_cwes():
 
-    soup = request_clean_page(BASE_URL)
+    try:
+        soup = request_clean_page(BASE_URL)
+    except ConnectionError:
+        log.error(f'\tCould not connect to {BASE_URL}.')
+        return
 
     ids = [MITRE_ID, OWASP_ID]
     outputs = [MITRE_OUTPUT_FILE_PATH, OWASP_OUTPUT_FILE_PATH]
